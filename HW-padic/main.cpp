@@ -1,73 +1,105 @@
 
 #include <cmath>
-#include <list>
+#include <map>
+#include <vector>
 #include <iostream>
+#include <bitset>
 
-int f(int x) {
+int f(int x) { 
 	return 33 + 3 * x * x;
 }
 
-double g(int x) {
-	return 13 * x + 0.8;
+int f2(int x) {  // transitive
+	return 2 * x * x + 3 * x + 7;
+
 }
 
-bool isCircle(std::list<int> list) {
-
-	return true;
-}
-
-std::list<int>::iterator circularNext(std::list<int>& l, std::list<int>::iterator& it)
-{
-	return std::next(it) == l.end() ? l.begin() : std::next(it);
+int g(int x, int floatNumValue) {
+	return 13 * x + floatNumValue;
 }
 
 int main() {
+	// f(x) transitive test start
+	bool isTransitive = true, isCyclesExist = false;
+	int  nMax = 10;
+	for (int i = 1; i < nMax; i++) {
+		int module = pow(2, i);
+		std::map<int, int> permitations;
+		for (int j = 0; j < module; j++) {
 
+			permitations.insert(std::make_pair(j, f(j) % module));
 
-
-	int n = 1, nMax = 10;
-	bool isTransitive = true;
-	// f(x)
-	while (n < nMax) {
-		int module = pow(2, n);
-		std::list<int> set;
-		set.push_back(0);
-		for (int i = 0; i < module; i++) {
-			int result = f(i) % module;
-			std::list<int>::iterator iter = std::find_if(set.begin(), set.end(), [=](int n) {
-				return n == result;
-				});
-			if (iter != set.end()) {
-				set.push_back(set.front());   // make a cycle
-				break;
+		}
+		std::cout <<"MODULE [" << module << "]\n";
+		std::cout << "Set size = " << permitations.size() << "\n";
+		int tmp = 0;
+		std::vector<int> circle;
+		for (int i = 0; i <= module; i++) {
+			auto from = permitations.find(tmp);
+			if (from != permitations.end()) {
+				std::cout << tmp << "->";
+				int to = from->second;
+				if(std::find(circle.begin(), circle.end(), to) != circle.end()){  // cycle exist
+					isCyclesExist = true;
+					if (i < module) // if cycle closed up before we reached the last element
+						// that means input function is non-bijective mapping 
+					{
+						isTransitive = false;
+						std::cout << "{!}";
+					}
+				}
+				tmp = to;
+				circle.push_back(to);
 			}
 			else {
-				set.push_back(result);
+				std:: cout << "\nERROR!!! Wrong input set\n";
+				break;
 			}
 		}
-		// check cycle
-		if (set.back() != set.front()) { isTransitive = false; }
-		else {
-			std::cout << "[MODULE = " << module << "]" << std::endl;
-			auto begin = set.begin();
-			std::cout << *begin << " -> ";
-			auto iter = circularNext(set, begin);
-			while (iter != set.begin()) {
-				std::cout << *iter << " -> ";
-				auto newIter = circularNext(set, iter);
-				iter = newIter;
-			}
-			std::cout << *iter << "\n";
-
-
-			 
-			
-			std::cout << std::endl;
-			std::cout << std::endl;
-		}
-
-		n++;
+		if (!isCyclesExist) { isTransitive = false; std::cout << "\nERROR!!!No cycle\n"; }
+		std::cout << "\n \n";
 	}
+
+	std::cout << "\n \n";
+	std::string result = isTransitive? "Function is transitive" : "Function is not transitive";
+	std::cout << "Result :" << result;
+	std::cout << "\n \n";
+	// f(x) transitive test end
+
+
+	// g(x)
+
+	union
+	{
+		float input; // assumes sizeof(float) == sizeof(int)
+		int   output;
+	} data;
+
+	data.input = 0.8;
+
+	std::bitset<sizeof(float)* CHAR_BIT> bits(data.output);
+	std::cout << bits << std::endl;
+
+	unsigned long range = bits.to_ulong() >> 2 & ((1 << (5 - 2 + 1)) - 1);
+
+	// Output the range of bits
+	std::cout << std::bitset<4>(range) << std::endl;
+
+	isTransitive = true, isCyclesExist = false;
+	nMax = 10;
+
+	for (int i = 1; i < nMax; i++) {
+		int module = pow(2, i);
+		std::map<int, int> permitations;
+
+
+	}
+
+
+	// or
+	std::cout << "BIT 4: " << bits[4] << std::endl;
+	std::cout << "BIT 7: " << bits[7] << std::endl;
+
 
 
 
