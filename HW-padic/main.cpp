@@ -3,87 +3,104 @@
 #include <map>
 #include <vector>
 #include <iostream>
-#include <bitset>
 #include <string> 
 
-// Valiant = 24 mod 20 + 1 = 5
-//
-int f(int x) { 
-	return 12 + 3 * x  - 14 * x * x;
-}
+#include "BitOperation.h"
+#include "Functions.h"
 
-int f2(int x) {  // transitive function
-	return 2 * x * x + 3 * x + 7;
-}
+//===============================================================================================
+// Variant = 24 mod 20 + 1 = 5
+// 
+// github: https://github.com/Meowchine1/HW-padic
+//===============================================================================================
 
-int g(int x, int floatNumValue) {
-	return 11 + floatNumValue * x;
-}
 
-void startIteration(int module, std::map<int, int> permitations, bool& transitive, bool& cycle) {
-	std::cout << "MODULE [" << module << "]\n";
-	std::cout << "Set size = " << permitations.size() << "\n";
-	int tmp = 0;
-	std::vector<int> circle;
-	for (int i = 0; i <= module; i++) {
-		auto from = permitations.find(tmp);
-		if (from != permitations.end()) {
-			std::cout << tmp << "->";
-			int to = from->second;
-			if (std::find(circle.begin(), circle.end(), to) != circle.end()) {  // cycle exist
-				cycle = true;
-				if (i < module) // if cycle closed up before we reached the last element
-					// that means input function is non-bijective mapping 
-				{
-					transitive = false;
-					std::cout << "{!}";
-				}
-			}
-			tmp = to;
-			circle.push_back(to);
+bool сycleExist(std::map<int, int> mapping) {
+	std::vector<int> passed;
+	passed.push_back(mapping.begin()->first);
+
+	for (auto &elem : mapping) {
+		if (std::find(passed.begin(), passed.end(), elem.second) != passed.end()) {
+
+			return false;
 		}
-		else {
-			std::cout << "\nERROR!!! Wrong input set\n"; // That means permutation collection has not key for transition
+		passed.push_back(elem.second);
+	}
+	return true;
+}
+
+void transitionBijectionCheck(int module, std::map<int, int> inputMapping, bool& transitive, bool& bijective) {
+	std::cout << "MODULE [" << module << "]\n" << "Set size = " << inputMapping.size() << "\n";
+
+	std::map<int, int> passedMapping;
+	auto display = inputMapping.begin();
+	for (int i = 0; i <= module; i++) {
+		auto prototype = display->first;
+		auto image = display->second;
+		
+		// when several keys refer same image function is not bijective
+		for (auto &elem : passedMapping) {
+		
+			if (elem.second == image) {
+				std::cout << "Attention: several keys refer same image function is not bijective.\n";
+				transitive = false;
+				bijective = false;
+				break;
+			}
+		}
+		
+		// map keys are unique according to the task
+		passedMapping.insert(prototype, image);
+
+		std::cout << "f" << "(" << prototype << ") =" << image << "\n";
+
+		if (i < module) {
+			// that means cycle closed before checking all nodes. And we can say that this function isn't one-cycle permitation.
+			if (сycleExist(passedMapping)) { 
+				std::cout << "Attention: cycle closed up before checking all nodes.\n";
+				transitive = false;
+			}
+		}
+		else { // если циклов вообще нет то это не биективное отображение и как следствие не транзитивное
+			if (!сycleExist(passedMapping)) {
+				std::cout << "Attention: no cycles.\n";
+				transitive = false;
+				bijective = false;
+				break;
+			}
+		}
+		display = inputMapping.find(image);
+		if (display == inputMapping.end()) {
+			// deadlock  тупиковое отображение
+			std::cout << "Attention: deadlock.\n";
 			transitive = false;
+			bijective = false;
 			break;
 		}
 	}
-	if (!cycle) { transitive = false; std::cout << "\nERROR!!!No cycle\n"; }
-	std::cout << "\n \n";
-}
-
-int binaryToDeciminal(std::bitset<32> binaryNum, int bitAmount) {
-	int decimal_number = 0, r = 1;
-	for (int l = 0; l < bitAmount; l++) {
-		if (binaryNum[l] == 1) {
-
-			decimal_number += r * pow(2, l);
-		}
-		r *= 10;
-	}
-	return decimal_number;
 }
 
 void Task_1_1(int (*f)(int)) {
 	int  nMax = 10;
-	bool isTransitive = true, isCyclesExist = false;
+	bool isTransitive = true, isBijective = true;
 	for (int i = 1; i < nMax; i++) {
 		int module = pow(2, i);
 		std::map<int, int> permitations;
 		for (int j = 0; j < module; j++) {
 			permitations.insert(std::make_pair(j, f(j) % module));
 		}
-		startIteration(module, permitations, isTransitive, isCyclesExist);
+		transitionBijectionCheck(module, permitations, isTransitive, isBijective);
 	}
-	std::cout << "\n \n";
-	std::string result = isTransitive ? "Function f() is transitive" : "Function f() is not transitive";
-	std::cout << "Result :" << result;
-	std::cout << "\n \n";
+	std::cout << "\n\n";
+	std::string result;
+	result += "[Transition]: "; result += isTransitive ? "Yes\n" : "No\n";
+	result += "[Bijection]: ";  result += isBijective ? "Yes\n" : "No\n";
+	std::cout << "Result:" << result;
 }
 
-void Task_1_2() {
-	int coef = 3, nMax = 5;
-	bool isTransitive = true, isCyclesExist = false;
+void Task_1_2(int (*f)(int, int)) {
+	int coef = 3, nMax = 5, numerator = 9, denominator = 7;;
+	bool isTransitive = true, isBijective = true;
 	unsigned long long int negative_binary = 1, rank = 1, powValue;
 	for (int i = 1; i < nMax; i++) { // -1/7
 		int degree = coef * i;
@@ -92,29 +109,29 @@ void Task_1_2() {
 		negative_binary += rank;
 	}
 	std::bitset<32> positive_binary(std::to_string(negative_binary));
+	std::bitset<32> num(numerator);
+	positive_binary = BitOperation::bitsetMultiplication(positive_binary, num);// -9/7
 	positive_binary = ~positive_binary;
 	positive_binary[0] = 1;
-	std::cout << "positive_binary: " << positive_binary << '\n'; // 1/7
+	std::cout << "positive_binary: " << positive_binary << '\n'; // 9/7
 	 
 	for (int i = 1; i < nMax; i++) {
 		int module = pow(2, i);
 		std::map<int, int> permitations;
 		for (int j = 0; j < module; j++) {
-			permitations.insert(std::make_pair(j, g(j, binaryToDeciminal(positive_binary, j)) % module));
+			permitations.insert(std::make_pair(j, f(j, BitOperation::binaryToDeciminal(positive_binary, j)) % module));
 		}
-		startIteration(module, permitations, isTransitive, isCyclesExist);
+		transitionBijectionCheck(module, permitations, isTransitive, isBijective);
 	}
-	std::cout << "\n \n";
-	std::string result = isTransitive ? "Function g() is transitive" : "Function g() is not transitive";
-	std::cout << "Result :" << result;
-	std::cout << "\n \n";
+	std::cout << "\n\n";
+	std::string result;
+	result += "[Transition]: "; result += isTransitive ? "Yes\n" : "No\n";
+	result += "[Bijection]: ";  result += isBijective ? "Yes\n" : "No\n";
+	std::cout << "Result:" << result;
 }
  
-
- 
-
 int main() {
-	Task_1_1(&f);
-	Task_1_1(&f2);
-	Task_1_2();
+	Task_1_1(Functions::f);
+	Task_1_1(Functions::transitiveFunction);
+	Task_1_2(Functions::g);
 }
