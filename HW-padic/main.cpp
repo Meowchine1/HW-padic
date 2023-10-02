@@ -4,9 +4,11 @@
 #include <vector>
 #include <iostream>
 #include <string> 
+#include <iomanip>
 
 #include "BitOperation.h"
 #include "Functions.h"
+
 
 //===============================================================================================
 // Variant = 24 mod 20 + 1 = 5
@@ -14,49 +16,70 @@
 // github: https://github.com/Meowchine1/HW-padic
 //===============================================================================================
 
+std::string LINE(70, '=');
+std::string LINEDELIMITER = LINE.append("\n\n");
 
 bool ñycleExist(std::map<int, int> mapping) {
 	std::vector<int> passed;
-	passed.push_back(mapping.begin()->first);
 
-	for (auto &elem : mapping) {
-		if (std::find(passed.begin(), passed.end(), elem.second) != passed.end()) {
+	auto nextPair = mapping.begin();
+	int i = 0;
+	while (i < mapping.size() + 1) {
 
-			return false;
+		int prototype = nextPair->first;
+		int image = nextPair->second;
+		if (std::find(passed.begin(), passed.end(), image) != passed.end() ) {
+			return true;
 		}
-		passed.push_back(elem.second);
+		passed.push_back(image);
+		nextPair = mapping.find(image);
+
+		if (nextPair == mapping.end()) {
+			for (auto elem : mapping) {
+				if (std::find(passed.begin(), passed.end(), elem.second) == passed.end()) {
+					nextPair = mapping.find(elem.first);
+					passed.clear();
+				}
+			}
+		}
+		if (nextPair == mapping.end()) { return false; }
+		i++;
 	}
-	return true;
+	return false;
 }
 
 void transitionBijectionCheck(int module, std::map<int, int> inputMapping, bool& transitive, bool& bijective) {
-	std::cout << "MODULE [" << module << "]\n" << "Set size = " << inputMapping.size() << "\n";
-
+	std::cout << "\nMODULE [" << module << "]\n"<< LINEDELIMITER << "Set size = " << inputMapping.size() << "\n";
 	std::map<int, int> passedMapping;
 	auto display = inputMapping.begin();
-	for (int i = 0; i <= module; i++) {
-		auto prototype = display->first;
-		auto image = display->second;
-		
-		// when several keys refer same image function is not bijective
-		for (auto &elem : passedMapping) {
-		
+	int i = 0;
+	for (auto display : inputMapping) {
+		int prototype = display.first;
+		int image = display.second;
+
+		for (auto& elem : passedMapping) {
 			if (elem.second == image) {
-				std::cout << "Attention: several keys refer same image function is not bijective.\n";
+				std::cout << "Attention: several keys refer same image function is not bijective and transitive.\n";
 				transitive = false;
 				bijective = false;
 				break;
 			}
 		}
-		
 		// map keys are unique according to the task
-		passedMapping.insert(prototype, image);
-
+		passedMapping.insert(std::make_pair(prototype, image));
 		std::cout << "f" << "(" << prototype << ") =" << image << "\n";
 
-		if (i < module) {
+		if (inputMapping.find(image) == inputMapping.end()) {
+
+			std::cout << "Attention: image falue from another set\n";
+			transitive = false;
+			bijective = false;
+			break;
+		}
+
+		if (i < (module - 1)) {
 			// that means cycle closed before checking all nodes. And we can say that this function isn't one-cycle permitation.
-			if (ñycleExist(passedMapping)) { 
+			if (ñycleExist(passedMapping)) {
 				std::cout << "Attention: cycle closed up before checking all nodes.\n";
 				transitive = false;
 			}
@@ -69,25 +92,22 @@ void transitionBijectionCheck(int module, std::map<int, int> inputMapping, bool&
 				break;
 			}
 		}
-		display = inputMapping.find(image);
-		if (display == inputMapping.end()) {
-			// deadlock  òóïèêîâîå îòîáğàæåíèå
-			std::cout << "Attention: deadlock.\n";
-			transitive = false;
-			bijective = false;
-			break;
-		}
+		i++;
 	}
 }
 
 void Task_1_1(int (*f)(int)) {
-	int  nMax = 10;
+	int  nMax = 4;
 	bool isTransitive = true, isBijective = true;
 	for (int i = 1; i < nMax; i++) {
 		int module = pow(2, i);
 		std::map<int, int> permitations;
 		for (int j = 0; j < module; j++) {
 			permitations.insert(std::make_pair(j, f(j) % module));
+		}
+		if (!(isTransitive || isBijective)) { 
+			std::cout << "\nSTOP CHECKING! No need to continue\n";
+			break; 
 		}
 		transitionBijectionCheck(module, permitations, isTransitive, isBijective);
 	}
@@ -108,18 +128,28 @@ void Task_1_2(int (*f)(int, int)) {
 		rank *= powValue;
 		negative_binary += rank;
 	}
-	std::bitset<32> positive_binary(std::to_string(negative_binary));
+
+	std::bitset<32> neg_binary(std::to_string(negative_binary));
 	std::bitset<32> num(numerator);
-	positive_binary = BitOperation::bitsetMultiplication(positive_binary, num);// -9/7
-	positive_binary = ~positive_binary;
+
+	std::cout << "Check binary numbers: \n";
+	std::cout << std::right << std::setw(10) << "-1/7 = " << neg_binary << "\n";
+	std::cout << std::right << std::setw(10) << "9 = " << num << "\n\n";
+
+	neg_binary = BitOperation::bitsetMultiplication(neg_binary, num);
+	std::cout << std::right << std::setw(10) << "-9/7 = " << neg_binary << "\n";
+	std::bitset<32> positive_binary = ~neg_binary;
 	positive_binary[0] = 1;
-	std::cout << "positive_binary: " << positive_binary << '\n'; // 9/7
+	std::cout << std::right << std::setw(10) << "9/7 = " << positive_binary << '\n';
 	 
 	for (int i = 1; i < nMax; i++) {
 		int module = pow(2, i);
+		int binaryToDeciminal = BitOperation::binaryToDeciminal(positive_binary, i);
+		std::cout << "\n\nbit count = " << i << "  deciminal -> " << binaryToDeciminal << "\n";
 		std::map<int, int> permitations;
 		for (int j = 0; j < module; j++) {
-			permitations.insert(std::make_pair(j, f(j, BitOperation::binaryToDeciminal(positive_binary, j)) % module));
+
+			permitations.insert(std::make_pair(j, f(j, binaryToDeciminal) % module));
 		}
 		transitionBijectionCheck(module, permitations, isTransitive, isBijective);
 	}
@@ -131,7 +161,13 @@ void Task_1_2(int (*f)(int, int)) {
 }
  
 int main() {
+	/*std::cout << "\tFUNCTION f(x)\n";
 	Task_1_1(Functions::f);
-	Task_1_1(Functions::transitiveFunction);
+	std::cout << LINEDELIMITER;*/
+	//std::cout << "\tFUNCTION transitive(x)\n";
+	//Task_1_1(Functions::transitiveFunction);
+	//std::cout << LINEDELIMITER;
+
+
 	Task_1_2(Functions::g);
 }

@@ -1,13 +1,12 @@
 #include "BitOperation.h"
 
 int BitOperation::binaryToDeciminal(std::bitset<32> binaryNum, int bitAmount) {
-	int decimal_number = 0, r = 1;
+	int decimal_number = 0;
 	for (int l = 0; l < bitAmount; l++) {
 		if (binaryNum[l] == 1) {
-
-			decimal_number += r * pow(2, l);
+			decimal_number +=  pow(2, l);
 		}
-		r *= 10;
+		
 	}
 	return decimal_number;
 }
@@ -23,7 +22,7 @@ std::bitset<32> BitOperation::bitsetAdd(std::bitset<32>& x, std::bitset<32>& y)
 {
 	bool carry = false;
 	std::bitset<32> ans;
-	for (int i = 0; i < 33; i++) {
+	for (int i = 0; i < 32; i++) {
 		ans[i] = fullAdder(x[i], y[i], carry);
 	}
 	return ans;
