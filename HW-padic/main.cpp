@@ -13,7 +13,7 @@
 //===============================================================================================
 // Variant = 24 mod 20 + 1 = 5
 // 
-// github: https://github.com/Meowchine1/HW-padic
+// full in github: https://github.com/Meowchine1/HW-padic
 //===============================================================================================
 
 std::string LINE(70, '=');
@@ -159,15 +159,32 @@ void Task_1_2(int (*f)(int, int)) {
 	result += "[Bijection]: ";  result += isBijective ? "Yes\n" : "No\n";
 	std::cout << "Result:" << result;
 }
+
+void Task2(int (*f)(int)) {
+	bool isTransitive = true, isBijective = true;
+	int module = 256;
+	std::map<int, int> permitations;
+	for (int j = 0; j < module; j++) {
+		permitations.insert(std::make_pair(j, f(j) % module));
+	}
+	transitionBijectionCheck(module, permitations, isTransitive, isBijective);
+	std::string result;
+	result += "[Transition]: "; result += isTransitive ? "Yes\n" : "No\n";
+	result += "[Bijection]: ";  result += isBijective ? "Yes\n" : "No\n";
+	std::cout << "Result:" << result;
+}
+
+	
  
 int main() {
 	/*std::cout << "\tFUNCTION f(x)\n";
 	Task_1_1(Functions::f);
-	std::cout << LINEDELIMITER;*/
-	//std::cout << "\tFUNCTION transitive(x)\n";
-	//Task_1_1(Functions::transitiveFunction);
-	//std::cout << LINEDELIMITER;
+	std::cout << LINEDELIMITER;
+	std::cout << "\tFUNCTION transitive(x)\n";
+	Task_1_1(Functions::transitiveFunction);
+	std::cout << LINEDELIMITER;
+	Task_1_2(Functions::g);*/
 
+	Task2(Functions::logicF);
 
-	Task_1_2(Functions::g);
 }
