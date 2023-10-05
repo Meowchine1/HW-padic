@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string> 
 #include <iomanip>
+#include <SFML/Graphics.hpp>
 
 #include "BitOperation.h"
 #include "Functions.h"
@@ -16,8 +17,8 @@
 // full in github: https://github.com/Meowchine1/HW-padic
 //===============================================================================================
 
-std::string LINE(70, '=');
-std::string LINEDELIMITER = LINE.append("\n\n");
+std::string LINE(70, '='), LINEDELIMITER = LINE.append("\n\n");
+const int H = 600, W = 600;
 
 bool сycleExist(std::map<int, int> mapping) {
 	std::vector<int> passed;
@@ -174,7 +175,86 @@ void Task2(int (*f)(int)) {
 	std::cout << "Result:" << result;
 }
 
-	
+void print(int k, int (*f)(int)) {
+	sf::RenderWindow window(sf::VideoMode(H, W), "15");
+	window.setFramerateLimit(60);
+	sf::Event event;
+	sf::CircleShape point(5);
+	point.setFillColor(sf::Color::Red);
+	while (window.isOpen())
+	{
+		while (window.pollEvent(event))
+		{
+			if (event.type == sf::Event::Closed) window.close();
+			if (event.type == sf::Event::KeyPressed)
+			{
+				// Получаем нажатую клавишу - выполняем соответствующее действие
+				if (event.key.code == sf::Keyboard::Escape) window.close();
+			}
+		}
+		// Выполняем необходимые действия по отрисовке
+		window.clear();
+		int module = pow(2, k);
+		for (int j = 0; j < module; j++) {
+			double num = j;
+			double rationalNum = num / module;
+			double f_value = f(j) % module;
+			double rational_f_value = f_value / module;
+			point.setPosition(rationalNum * H, rational_f_value * W);
+			window.draw(point);
+		}
+		window.display();
+	}
+}
+
+void print_1_2(int k, int (*f)(int, int)) {
+	sf::RenderWindow window(sf::VideoMode(H, W), "15");
+	window.setFramerateLimit(60);
+	sf::Event event;
+	sf::CircleShape point(5);
+	point.setFillColor(sf::Color::Red);
+
+	while (window.isOpen())
+	{
+		while (window.pollEvent(event))
+		{
+			if (event.type == sf::Event::Closed) window.close();
+			if (event.type == sf::Event::KeyPressed)
+			{
+				// Получаем нажатую клавишу - выполняем соответствующее действие
+				if (event.key.code == sf::Keyboard::Escape) window.close();
+			}
+		}
+
+		// Выполняем необходимые действия по отрисовке
+		window.clear();
+		int coef = 3, nMax = k, numerator = 9, denominator = 7;
+		unsigned long long int negative_binary = 1, rank = 1, powValue;
+		for (int i = 1; i < nMax; i++) { // -1/7
+			int degree = coef * i;
+			powValue = pow(10, degree - coef * (i - 1));;
+			rank *= powValue;
+			negative_binary += rank;
+		}
+		std::bitset<32> neg_binary(std::to_string(negative_binary));
+		std::bitset<32> num(numerator);
+		neg_binary = BitOperation::bitsetMultiplication(neg_binary, num);
+		std::bitset<32> positive_binary = ~neg_binary;
+		positive_binary[0] = 1;
+		int module = pow(2, k);
+		int binaryToDeciminal = BitOperation::binaryToDeciminal(positive_binary, k);
+		for (int j = 0; j < module; j++) {
+			double num = j;
+			double rationalNum = num / module;
+			double f_value = f(j, binaryToDeciminal) % module;
+			double rational_f_value = f_value / module;
+			point.setPosition(rationalNum * H, rational_f_value * W);
+			window.draw(point);
+		}
+		
+		window.display();
+	}
+}
  
 int main() {
 	/*std::cout << "\tFUNCTION f(x)\n";
@@ -185,6 +265,11 @@ int main() {
 	std::cout << LINEDELIMITER;
 	Task_1_2(Functions::g);*/
 
-	Task2(Functions::logicF);
+	//Task2(Functions::logicF);
 
-}
+	//print(15, Functions::f);
+	//print_1_2(5, Functions::g);
+	print(10, Functions::logicF);
+	}
+
+
