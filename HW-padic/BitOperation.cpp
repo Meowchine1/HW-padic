@@ -6,9 +6,19 @@ int BitOperation::binaryToDeciminal(std::bitset<32> binaryNum, int bitAmount) {
 		if (binaryNum[l] == 1) {
 			decimal_number +=  pow(2, l);
 		}
-		
 	}
 	return decimal_number;
+}
+
+double BitOperation::binaryTo_P_adic(std::bitset<32> binaryNum, double radix, int bitAmount)
+{
+	double p_adic_number = 0;
+	for (int l = 0; l < bitAmount; l++) {
+		if (binaryNum[l] == 1) {
+			p_adic_number += pow(radix, l);
+		}
+	}
+	return p_adic_number;
 }
 
 bool BitOperation::fullAdder(bool b1, bool b2, bool& carry)
@@ -44,3 +54,5 @@ std::bitset<32> BitOperation::bitsetMultiplication(std::bitset<32>& x, std::bits
 	}
 	return ans;
 }
+
+ 
