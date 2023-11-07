@@ -78,34 +78,37 @@ void transitionBijectionCheck(int module, std::map<int, int> inputMapping, bool&
 			bijective = false;
 			break;
 		}
-
-		if (i < (module - 1)) {
-			// that means cycle closed before checking all nodes. And we can say that this function isn't one-cycle permitation.
-			if (сycleExist(passedMapping)) {
-				std::cout << "Attention: cycle closed up before checking all nodes.\n";
-				transitive = false;
+		{
+			if (i > (module - 1)) { // если циклов вообще нет то это не биективное отображение и как следствие не транзитивное
+				if (!сycleExist(passedMapping)) {
+					std::cout << "Attention: no cycles.\n";
+					transitive = false;
+					bijective = false;
+					break;
+				}
 			}
+			i++;
 		}
-		else { // если циклов вообще нет то это не биективное отображение и как следствие не транзитивное
-			if (!сycleExist(passedMapping)) {
-				std::cout << "Attention: no cycles.\n";
-				transitive = false;
-				bijective = false;
-				break;
-			}
-		}
-		i++;
 	}
 }
 
 void Task_1_1(int (*f)(int)) {
-	int  nMax = 4;
+	int  nMax = 4, res = 0;
 	bool isTransitive = true, isBijective = true;
 	for (int i = 1; i < nMax; i++) {
 		int module = pow(2, i);
 		std::map<int, int> permitations;
 		for (int j = 0; j < module; j++) {
-			permitations.insert(std::make_pair(j, f(j) % module));
+			int func = f(j);
+			if (func < 0) {
+				std::bitset<64> image(func);
+				res = BitOperation::binaryToDeciminal(image, i);
+			}
+			else {
+				 res = func % module;
+			}
+			 
+			permitations.insert(std::make_pair(j, res));
 		}
 		if (!(isTransitive || isBijective)) { 
 			std::cout << "\nSTOP CHECKING! No need to continue\n";
@@ -131,8 +134,8 @@ void Task_1_2(int (*f)(int, int)) {
 		negative_binary += rank;
 	}
 
-	std::bitset<32> neg_binary(std::to_string(negative_binary));
-	std::bitset<32> num(numerator);
+	std::bitset<64> neg_binary(std::to_string(negative_binary));
+	std::bitset<64> num(numerator);
 
 	std::cout << "Check binary numbers: \n";
 	std::cout << std::right << std::setw(10) << "-1/7 = " << neg_binary << "\n";
@@ -140,7 +143,7 @@ void Task_1_2(int (*f)(int, int)) {
 
 	neg_binary = BitOperation::bitsetMultiplication(neg_binary, num);
 	std::cout << std::right << std::setw(10) << "-9/7 = " << neg_binary << "\n";
-	std::bitset<32> positive_binary = ~neg_binary;
+	std::bitset<64> positive_binary = ~neg_binary;
 	positive_binary[0] = 1;
 	std::cout << std::right << std::setw(10) << "9/7 = " << positive_binary << '\n';
 	 
@@ -192,11 +195,19 @@ void print(int k, int (*f)(int)) {
 		}
 		window.clear();
 		int module = pow(2, k);
+
 		for (int j = 0; j < module; j++) {
 			double num = j;
 			double rationalNum = num / module;
-			double f_value = f(j) % module;
-			double rational_f_value = f_value / module;
+			double f_value = f(j), result = 0.0;
+			if (f_value < 0) {
+				std::bitset<64> image(f(j));
+				result = BitOperation::binaryToDeciminal(image, k);
+			}
+			else {
+			 result = f(j) % module;
+			}
+			double rational_f_value = result / module;
 			//std::cout << rationalNum * H << ";" << rational_f_value * W << "\n";
 			point.setPosition(rationalNum * H, rational_f_value * W);
 			window.draw(point);
@@ -227,10 +238,10 @@ void print_1_2(int k, int (*f)(int, int)) {
 			rank *= powValue;
 			negative_binary += rank;
 		}
-		std::bitset<32> neg_binary(std::to_string(negative_binary));
-		std::bitset<32> num(numerator);
+		std::bitset<64> neg_binary(std::to_string(negative_binary));
+		std::bitset<64> num(numerator);
 		neg_binary = BitOperation::bitsetMultiplication(neg_binary, num);
-		std::bitset<32> positive_binary = ~neg_binary;
+		std::bitset<64> positive_binary = ~neg_binary;
 		positive_binary[0] = 1;
 		int module = pow(2, k);
 		int binaryToDeciminal = BitOperation::binaryToDeciminal(positive_binary, k);
@@ -266,14 +277,14 @@ void print_beta(int k, int (*f)(int)) {
 			}
 		}
 		window.clear();
+
 		for (int j = 0; j < nodeCount; j++) {
-			std::bitset<32> prototype(j);
-			std::bitset<32> image(f(j));
+			std::bitset<64> prototype(j);
+			std::bitset<64> image(f(j));
 			double p_adic_prototype = BitOperation::binaryTo_P_adic(prototype, p, k);
 			double p_adic_image = BitOperation::binaryTo_P_adic(image, p, k);
 			int x = (int)p_adic_prototype / p, y = (int)p_adic_image / p;
-			point.setPosition(x * H/4, y * W/4);
-			//std::cout << x * H / 4 << ";" << y * W / 4 << "\n";
+			point.setPosition(x * H/4, y * W/4); 
 			window.draw(point);
 		}
 		window.display();
@@ -304,21 +315,19 @@ void print_beta_1_2(int k, int (*f)(int, int)) {
 			rank *= powValue;
 			negative_binary += rank;
 		}
-		std::bitset<32> neg_binary(std::to_string(negative_binary));
-		std::bitset<32> num(numerator);
+		std::bitset<64> neg_binary(std::to_string(negative_binary));
+		std::bitset<64> num(numerator);
 		neg_binary = BitOperation::bitsetMultiplication(neg_binary, num);
-		std::bitset<32> positive_binary = ~neg_binary;
+		std::bitset<64> positive_binary = ~neg_binary;
 		positive_binary[0] = 1;
 		int module = pow(2, k);
 		int binaryToDeciminal = BitOperation::binaryToDeciminal(positive_binary, k);
 		for (int j = 0; j < module; j++) {
 			double num = j;
-			//double rationalNum = num / module;
 			double f_value = f(j, binaryToDeciminal) % module;
-			//double rational_f_value = f_value / module;
 
-			std::bitset<32> prototype(num);
-			std::bitset<32> image(f_value);
+			std::bitset<64> prototype(num);
+			std::bitset<64> image(f_value);
 			double p_adic_prototype = BitOperation::binaryTo_P_adic(prototype, p, k);
 			double p_adic_image = BitOperation::binaryTo_P_adic(image, p, k);
 			int x = (int)p_adic_prototype / p, y = (int)p_adic_image / p;
@@ -329,13 +338,53 @@ void print_beta_1_2(int k, int (*f)(int, int)) {
 	}
 }
 
- 
+std::vector<double> van_der_corput_sequence_Kakutani(int n, double (*f)(int)) {
+	std::vector<double> sequence;
+	for (int i = 1; i <= n; i++) {
+		double result = f(i);
+		sequence.push_back(result);
+	}
+	return sequence;
+}
+
+std::vector<double> van_der_corput_sequence_Monna(int n, int base, double (*f)(int)) {
+	std::vector<double> sequence;
+	for (int i = 1; i <= n; i++) {
+		double result = f(i);
+		sequence.push_back((int)result % base);
+	}
+	return sequence;
+}
 
  
 int main() {
+
+	//// разложение функции в кольцо вычетов по модулю 4
+	//for (int i = 0; i < 4; i++) {
+	//
+	//	int x = i,
+	//		y = 12 + 3 * x - 14 * x * x,
+	//		 result = 0;
+	//	if (y < 0) {
+	//		std::bitset<64> image(y);
+	//		result = BitOperation::binaryToDeciminal(image, 2);
+
+	//	}
+	//	else {
+	//		result = y % 4;
+	//	}
+	//	std::cout << "f[" << x << "] = " << result << std::endl;
+	//	
+	//}
+
 	
-	//print(8, Functions::f);
-	/*print_1_2(6, Functions::g);*/
+	/*Task_1_1(Functions::f);
+	Task_1_2(Functions::g);
+	Task2(Functions::logicF);*/
+		
+
+	//print(14, Functions::f);
+	//print_1_2(15, Functions::g);
 	//print(8, Functions::logicF);
 
 
@@ -345,8 +394,31 @@ int main() {
 	// 
 	//print_beta_1_2(5, Functions::g);
 	// 
-	print_beta(10, Functions::logicF);
+	//print_beta(10, Functions::logicF);
 	 
+
+
+	std::vector<double> vanDerCorputSeq_kakutani = van_der_corput_sequence_Kakutani(40, Functions::kakutani_neumann);
+	std::vector<double> vanDerCorputSeq_monna = van_der_corput_sequence_Monna(40,2, Functions::monna_map);
+
+	std::cout << "Kakutani : ";
+
+	for (int i = 0; i < vanDerCorputSeq_kakutani.size(); i++) {
+		double elem = vanDerCorputSeq_kakutani[i];
+	  
+		std::cout << elem << " ";
+		 
+	}
+	std::cout << std::endl;
+	std::cout << "\nMonna: ";
+
+	for (int i = 0; i < vanDerCorputSeq_monna.size(); i++) {
+		double elem = vanDerCorputSeq_monna[i];
+
+		std::cout << elem<<" ";
+
+	}
+
 	}
 
 
